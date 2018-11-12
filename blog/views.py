@@ -3,12 +3,13 @@ from django.utils import timezone
 from .models import Post
 from django.contrib.auth.decorators import login_required
 
-# Create your views here.
-
+#---------------------------------MAIN PAGE
 def post_list(request):
 	posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
 	return render(request, 'blog/post_list.html', {'posts':posts})
 
+
+#---------------------------------POST PAGE
 from django.shortcuts import render, get_object_or_404
 def post_detail(request, pk):
 	post = get_object_or_404(Post, pk=pk)
@@ -66,7 +67,9 @@ def post_remove(request, pk):
 	post.delete()
 	return redirect('post_list')
 
+#--------------------------COMMENT 
 from .forms import CommentForm
+from .models import Comment
 def add_comment_to_post(request, pk):
 	post = get_object_or_404(Post, pk=pk)
 	if request.method == "POST":
@@ -80,7 +83,6 @@ def add_comment_to_post(request, pk):
 		form = CommentForm()
 	return render(request, 'blog/add_comment_to_post.html', {'form':form})
 
-from .models import Comment
 @login_required
 def comment_approve(request,pk):
 	comment = get_object_or_404(Comment, pk=pk)
@@ -92,3 +94,21 @@ def comment_remove(request,pk):
 	comment = get_object_or_404(Comment, pk=pk)
 	comment.delete()
 	return redirect('post_detail', pk=comment.post.pk)
+
+
+from django.contrib.auth.models import User
+from .forms import UserForm
+def signup(request):
+	if request.method == "POST":
+		form = UserForm(request.POST)
+		if form.is_valid():
+			new_user = User.objects.create_user(**form.cleaned_data)
+			return post_list(request)
+			#login(request, new_user)
+			#return redirect('post_list')
+	else:
+		form = UserForm()
+	return render(request, 'blog/signup.html', {'form':form})
+
+def blockchain_start(request):
+	return render(request, 'blog/post_list.html')

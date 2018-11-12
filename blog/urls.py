@@ -12,4 +12,6 @@ urlpatterns = [
 	url(r'^post/(?P<pk>\d+)/comment/$', views.add_comment_to_post, name='add_comment_to_post'),
 	url(r'^comment/(?P<pk>\d+)/approve/$', views.comment_approve, name='comment_approve'),
 	url(r'^comment/(?P<pk>\d+)/remove/$', views.comment_remove, name='comment_remove'),
+	url(r'^signup/$', views.signup, name='signup'),
+	url(r'^blockchain_start/$', views.blockchain_start, name='blockchain_start'),
 ]

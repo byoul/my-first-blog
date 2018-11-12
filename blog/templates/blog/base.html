@@ -19,10 +19,12 @@
 				</a>
 				<p class="top-menu">Hello {{user.username}}<small>
 				(<a href="{% url 'logout' %}">Log out</a>)</small></p>
+				<a href="{% url 'blockchain_start' %}">START</a>
 			{% else %}
 				<a href="{% url 'login' %}" class="top-menu">
 					<span class="glyphicon glyphicon-lock"></span>
 				</a>
+				<a href="{% url 'signup' %}" class="top-menu">signup</a>
 			{% endif %}
 
 			<h1><a href="{% url 'post_list' %}">Django Girls Blog</a></h1>
