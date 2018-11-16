@@ -125,8 +125,8 @@ def blockchain_start(request):
 
 	#Case 3
 	pwd = os.path.dirname(__file__)
-	#f = open(pwd + '/Auction.sol')
-	f = open(pwd + '/pqueue.sol')
+	f = open(pwd + '/../contract/Auction.sol')
+	#f = open(pwd + '/pqueue.sol')
 
 	contract_source_code = f.read()
 	f.close()
@@ -136,10 +136,10 @@ def blockchain_start(request):
 	w3.personal.unlockAccount(w3.eth.accounts[0],"1234",0)
 	print('success')
 
-	#compiled_sol = compile_source(contract_source_code, import_remapping=['=','-'])
-	compiled_sol = compile_source(contract_source_code)
-	#contract_interface = compiled_sol["<stdin>:Auction"]
-	contract_interface = compiled_sol["<stdin>:queue"]
+	compiled_sol = compile_source(contract_source_code, import_remappings=['=','-'])
+	#compiled_sol = compile_source(contract_source_code)
+	contract_interface = compiled_sol["<stdin>:Auction"]
+	#contract_interface = compiled_sol["<stdin>:queue"]
 
 	contract = w3.eth.contract(abi= contract_interface['abi'],bytecode = contract_interface['bin'],bytecode_runtime=contract_interface['bin-runtime'])
 

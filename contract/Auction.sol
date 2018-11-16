@@ -4,8 +4,7 @@
 // features of Solidity.
 ////////////////////////////////////////////////////////////
 pragma solidity ^0.4.25;
-import "github.com/ethereum/dapp-bin/library/pqueue.sol";
-//import "pqueue.sol";
+import "./contract/pqueue.sol";
 
 contract Auction is queue {
     //data
