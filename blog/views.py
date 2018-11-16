@@ -110,5 +110,47 @@ def signup(request):
 		form = UserForm()
 	return render(request, 'blog/signup.html', {'form':form})
 
+#--------------------------------blockchain
+import os
+import time
+from web3 import Web3, HTTPProvider
+from solc import compile_source
 def blockchain_start(request):
+	#Case1
+	#module_dir = os.path.dirname(__file__)
+	#f = os.path.join(module_dir, 'Auction.sol')
+
+	#Case2
+	#f = open('./Auction.sol', 'r')
+
+	#Case 3
+	pwd = os.path.dirname(__file__)
+	#f = open(pwd + '/Auction.sol')
+	f = open(pwd + '/pqueue.sol')
+
+	contract_source_code = f.read()
+	f.close()
+
+	rpc_url="http://localhost:8541"
+	w3 = Web3(HTTPProvider(rpc_url))
+	w3.personal.unlockAccount(w3.eth.accounts[0],"1234",0)
+	print('success')
+
+	#compiled_sol = compile_source(contract_source_code, import_remapping=['=','-'])
+	compiled_sol = compile_source(contract_source_code)
+	#contract_interface = compiled_sol["<stdin>:Auction"]
+	contract_interface = compiled_sol["<stdin>:queue"]
+
+	contract = w3.eth.contract(abi= contract_interface['abi'],bytecode = contract_interface['bin'],bytecode_runtime=contract_interface['bin-runtime'])
+
+	tx_hash = contract.deploy(transaction={'from':w3.eth.accounts[0]})
+
+	print("tx_hash : ", tx_hash)
+
+	time.sleep(10) #Wait for mining
+
+	tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
+	contract_address = tx_receipt['contractAddress']
+	
+	print ("contract_address", contract_address)
 	return render(request, 'blog/post_list.html')
