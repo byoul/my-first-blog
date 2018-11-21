@@ -133,7 +133,6 @@ def blockchain_start(request):
 			matching(request)
 	return render(request, 'blog/blockchain_start.html')
 
-#Use only manager
 def contract_create(request):
 	print("contract section")
 
@@ -162,15 +161,19 @@ def contract_create(request):
 	contract_address = tx_receipt['contractAddress']
 
 	#Save addr for various user
+	global contractAddress, globalAbi
+	contractAddress = contract_address
+	globalAbi = contract_interface['abi']
 	#save address
 	f = open(pwd + '/../contract/address','w')
 	f.write(contract_address)
 	f.close()
-	#save abi (TODO; implement read abi.json function)
+	#save abi
 	f = open(pwd + '/../contract/abi.json','w')
-	f.write(str(contract_interface['abi']))
+	f.write(str(globalAbi))
 	f.close()
 
+	###Delete later
 	#Use for contract
 	auction = w3.eth.contract(
 		address=tx_receipt.contractAddress,
@@ -184,6 +187,7 @@ def contract_create(request):
 	print ("contract_address", contract_address)
 	return render(request, 'blog/blockchain_start.html')
 
+import json
 def contract_ready(request):
 	print ('ready section')
 
@@ -192,31 +196,30 @@ def contract_ready(request):
 	w3 = Web3(HTTPProvider(rpc_url))
 	w3.personal.unlockAccount(w3.eth.accounts[0],"1234",0)
 
-	if 'auction' not in globals():
-		print ('auction not in globals section')
-		#Find contract addreess	
-		pwd = os.path.dirname(__file__)
-		f = open(pwd + '/../contract/address','r')
-		contractAddress = f.read()
-		f.close()
 
-		#Find abi (TODO; can't find ABI file parsing, so read .sol & compile again)
-		#f = open(pwd + '/../contract/abi.json','r')
-		#aabi = f.read(); f.close()
-		f = open(pwd + '/../contract/Auction.sol','r')
-		contract_source_code = f.read()
-		f.close()
-		compiled_sol = compile_source(contract_source_code,import_remappings=['=','-'])
-		contract_interface = compiled_sol["<stdin>:Auction"]
-		abi = contract_interface['abi']
+	#Find contract addreess
+	pwd = os.path.dirname(__file__)
+	f = open(pwd + '/../contract/address','r')
+	ccontractAddress = f.read()
+	f.close()
 
-		#Connect Deployed contract
-		global auction
-		auction = w3.eth.contract(
-			address = contractAddress,
-			abi = abi,
-		)
+	#Find abi (TODO; can't find ABI file parsing, so read .sol & compile again)
+	#f = open(pwd + '/../contract/abi.json','r')
+	#aabi = f.read()
+	#f.close()
+	f = open(pwd + '/../contract/Auction.sol','r')
+	contract_source_code = f.read()
+	f.close()
+	compiled_sol = compile_source(contract_source_code,import_remappings=['=','-'])
+	contract_interface = compiled_sol["<stdin>:Auction"]
+	aabi = contract_interface['abi']
+	
 
+	#Connect Deployed contract
+	auction = w3.eth.contract(
+		address = ccontractAddress,
+		abi = aabi,
+	)
 	#Check
 	check = auction.functions.queueTop_sell().call()
 	print(check)
@@ -226,43 +229,20 @@ def contract_ready(request):
 
 def contract_sell(request):
 	print("sell section")
-	if 'auction' not in globals():
-		contract_ready(request)
-
 	return render(request, 'blog/blockchain_start.html')
 
 def contract_buy(request):
 	print("buy section")
-	if 'auction' not in globals():
-		contract_ready(request)
-
 	return render(request, 'blog/blockchain_start.html')
 
 def cheapest(request):
 	print("cheapest section")
-	if 'auction' not in globals():
-		contract_ready(request)
-
-	#TODO; Delete later or use only manager
-	#Check cheapest price
-	print('Cheapest Price: {}'.format(auction.functions.queueTop_sell().call()))
-
 	return render(request, 'blog/blockchain_start.html')
 
 def expensive(request):
 	print("expensive section")
-	if 'auction' not in globals():
-		contract_ready(request)
-
-	#TODO; Delete later or use only manager
-	#Check most expensive price
-	print('Most Expensive Price: {}'.format(auction.functions.queueTop_buy().call()))
-
 	return render(request, 'blog/blockchain_start.html')
 
 def matching(request):
 	print("matching section")
-	if 'auction' not in globals():
-		contract_ready(request)
-
 	return render(request, 'blog/blockchain_start.html')
