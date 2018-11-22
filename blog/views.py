@@ -67,7 +67,7 @@ def post_remove(request, pk):
 	post.delete()
 	return redirect('post_list')
 
-#--------------------------COMMENT 
+#---------------------------------COMMENT 
 from .forms import CommentForm
 from .models import Comment
 def add_comment_to_post(request, pk):
@@ -120,17 +120,23 @@ def blockchain_start(request):
 		if "_create" in request.POST:
 			contract_create(request)
 		elif "_at" in request.POST:
-			contract_ready(request)
+			addr = contract_ready(request)
+			return render(request, 'blog/blockchain_start.html', {'contract_address': addr})
 		elif "_seller" in request.POST:
-			contract_sell(request)
+			chprice = contract_sell(request)
+			return render(request, 'blog/blockchain_start.html', {'cheapest_price':chprice})
 		elif "_buyer" in request.POST:
-			contract_buy(request)
+			exprice = contract_buy(request)
+			return render(request, 'blog/blockchain_start.html', {'expensive_price':exprice})
 		elif "_queueTop_sell" in request.POST:
-			cheapest(request)
+			chprice = cheapest(request)
+			return render(request, 'blog/blockchain_start.html', {'cheapest_price':chprice})
 		elif "_queueTop_buy" in request.POST:
-			expensive(request)
+			exprice = expensive(request)
+			return render(request, 'blog/blockchain_start.html', {'expensive_price':exprice})
 		elif "_matching" in request.POST:
-			matching(request)
+			chprice ,exprice, qSizeSell, qSizeBuy = matching(request)
+			return render(request, 'blog/blockchain_start.html', {'cheapest_price':chprice, 'expensive_price':exprice, 'queueSize_sell':qSizeSell, 'queueSize_buy':qSizeBuy})
 	return render(request, 'blog/blockchain_start.html')
 
 #Use only manager
@@ -172,13 +178,12 @@ def contract_create(request):
 	f.close()
 
 	#Use for contract
+	global auction
 	auction = w3.eth.contract(
 		address=tx_receipt.contractAddress,
 		abi = contract_interface['abi'],
 	)
 	#Check
-	check = auction.functions.queueTop_sell().call()
-	print(check)
 	print('Cheapest Price: {}'.format(auction.functions.queueTop_sell().call()))
 
 	print ("contract_address", contract_address)
@@ -188,6 +193,7 @@ def contract_ready(request):
 	print ('ready section')
 
 	#Connect blockchain
+	global w3
 	rpc_url = "http://localhost:8541"
 	w3 = Web3(HTTPProvider(rpc_url))
 	w3.personal.unlockAccount(w3.eth.accounts[0],"1234",0)
@@ -218,51 +224,70 @@ def contract_ready(request):
 		)
 
 	#Check
-	check = auction.functions.queueTop_sell().call()
-	print(check)
 	print('Cheapest Price: {}'.format(auction.functions.queueTop_sell().call()))
 
-	return render(request, 'blog/blockchain_start.html')
+	return auction.address
+
 
 def contract_sell(request):
 	print("sell section")
 	if 'auction' not in globals():
 		contract_ready(request)
+	
+	power = int(request.POST.get('_sellerPower'))
+	fee = int(request.POST.get('_sellerFee'))
 
-	return render(request, 'blog/blockchain_start.html')
+	sender = w3.eth.accounts[0]
+	tx_hash = auction.functions.addRequest_sell(power, fee).transact({'from':w3.eth.accounts[0],'gas':3000000})
+	tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+	print('tx_receipt answer')
+
+	return cheapest(request)
 
 def contract_buy(request):
 	print("buy section")
 	if 'auction' not in globals():
 		contract_ready(request)
+	power = int(request.POST.get('_buyerPower'))
+	fee = int(request.POST.get('_buyerFee'))
+	sender = w3.eth.accounts[0]
+	tx_hash = auction.functions.addRequest_buy(power).transact({'from':w3.eth.accounts[0],'value':fee,'gas':3000000})
+	tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+	print('tx_receipt answer')
 
-	return render(request, 'blog/blockchain_start.html')
+	return expensive(request)
 
+#TODO; Delete later or use only manager
 def cheapest(request):
 	print("cheapest section")
 	if 'auction' not in globals():
 		contract_ready(request)
-
-	#TODO; Delete later or use only manager
+	
 	#Check cheapest price
-	print('Cheapest Price: {}'.format(auction.functions.queueTop_sell().call()))
+	cheapest = float(auction.functions.queueTop_sell().call())
+	return cheapest
 
-	return render(request, 'blog/blockchain_start.html')
-
+#TODO; Delete later or use only manager
 def expensive(request):
 	print("expensive section")
 	if 'auction' not in globals():
 		contract_ready(request)
 
-	#TODO; Delete later or use only manager
 	#Check most expensive price
-	print('Most Expensive Price: {}'.format(auction.functions.queueTop_buy().call()))
-
-	return render(request, 'blog/blockchain_start.html')
+	expensive = float(auction.functions.queueTop_buy().call())
+	return expensive
 
 def matching(request):
 	print("matching section")
 	if 'auction' not in globals():
 		contract_ready(request)
+	tx_hash = auction.functions.matching().transact({'from':w3.eth.accounts[0], 'gas':3000000})
+	tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+	
+	cheap_price = cheapest(request)
+	expen_price = expensive(request)
 
-	return render(request, 'blog/blockchain_start.html')
+	qSizeSell = auction.functions.queueSize_sell().call()
+	qSizeBuy = auction.functions.queueSize_buy().call()
+
+	return cheap_price, expen_price, qSizeSell, qSizeBuy
