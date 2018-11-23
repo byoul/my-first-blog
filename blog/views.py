@@ -116,18 +116,18 @@ import time
 from web3 import Web3, HTTPProvider
 from solc import compile_source
 def blockchain_start(request):
-	global contractAddress, balance, power, chprice, exprice, qSizeSell, qSizeBuy
+	global sender, contractAddress, balance, power, chprice, exprice, qSizeSell, qSizeBuy
 	if request.method == "POST":
 		if "_login" in request.POST:
-			balance, power = ethereum_login(request)
+			sender, balance, power = ethereum_login(request)
 		elif "_create" in request.POST:
-			contract_create(request)
+			contractAddress = contract_create(request)
 		elif "_at" in request.POST:
 			contractAddress = contract_ready(request)
 		elif "_seller" in request.POST:
-			chprice = contract_sell(request)
+			balance, chprice = contract_sell(request)
 		elif "_buyer" in request.POST:
-			exprice = contract_buy(request)
+			balance, exprice = contract_buy(request)
 		elif "_queueTop_sell" in request.POST:
 			chprice = cheapest(request)
 		elif "_queueTop_buy" in request.POST:
@@ -135,6 +135,8 @@ def blockchain_start(request):
 		elif "_matching" in request.POST:
 			chprice ,exprice, qSizeSell, qSizeBuy = matching(request)
 	
+	if 'sender' not in globals():
+		sender = ""
 	if 'contractAddress' not in globals():
 		contractAddress = ""
 	if 'balance' not in globals():
@@ -174,7 +176,8 @@ def ethereum_login(request):
 		power = 0
 	else:
 		power = auction.functions.havePowerAmount(addr).call()
-	return balance, power
+
+	return addr, balance, power
 
 
 
@@ -223,7 +226,7 @@ def contract_create(request):
 	print('Cheapest Price: {}'.format(auction.functions.queueTop_sell().call()))
 
 	print ("contract_address", contract_address)
-	return render(request, 'blog/blockchain_start.html')
+	return contract_address
 
 def contract_ready(request):
 	print ('ready section')
@@ -270,12 +273,13 @@ def contract_sell(request):
 	power = int(request.POST.get('_sellerPower'))
 	fee = int(request.POST.get('_sellerFee'))
 
-	sender = w3.eth.accounts[0]
-	tx_hash = auction.functions.addRequest_sell(power, fee).transact({'from':w3.eth.accounts[0],'gas':3000000})
+	tx_hash = auction.functions.addRequest_sell(power, fee).transact({'from':sender,'gas':3000000})
 	tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
 	print('tx_receipt answer')
-
-	return cheapest(request)
+	
+	bal = w3.fromWei(w3.eth.getBalance(sender), 'wei')
+	cheap = auction.functions.queueTop_sell().call()
+	return bal, cheap
 
 def contract_buy(request):
 	print("buy section")
@@ -283,12 +287,13 @@ def contract_buy(request):
 		contract_ready(request)
 	power = int(request.POST.get('_buyerPower'))
 	fee = int(request.POST.get('_buyerFee'))
-	sender = w3.eth.accounts[0]
-	tx_hash = auction.functions.addRequest_buy(power).transact({'from':w3.eth.accounts[0],'value':fee,'gas':3000000})
+	tx_hash = auction.functions.addRequest_buy(power).transact({'from':sender,'value':fee,'gas':3000000})
 	tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
 	print('tx_receipt answer')
 
-	return expensive(request)
+	bal = w3.fromWei(w3.eth.getBalance(sender), 'wei')
+	expen = auction.functions.queueTop_buy().call()
+	return bal, expen
 
 #TODO; Delete later or use only manager
 def cheapest(request):
@@ -314,7 +319,7 @@ def matching(request):
 	print("matching section")
 	if 'auction' not in globals():
 		contract_ready(request)
-	tx_hash = auction.functions.matching().transact({'from':w3.eth.accounts[0], 'gas':3000000})
+	tx_hash = auction.functions.matching().transact({'from':sender, 'gas':3000000})
 	tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
 	
 	cheap_price = cheapest(request)
