@@ -1,6 +1,15 @@
 {% extends 'blog/base.html' %}
 
 {% block content %}
+<h3>Login</h3>
+<form method="POST">{% csrf_token %}
+	Address : <input type="text" name="_address"/>&nbsp;&nbsp;&nbsp;&nbsp;
+	Balances : {{ balance }}<br/>
+	Password : <input type="password" name="_password"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	Power : {{ powerAmount }}<br/>
+	<button name="_login">LOGIN</button>
+</form>
+
 <h3>Auction contract Create</h3>
 <form method="POST" class="create">{% csrf_token %}
 	<button id="btnCreate" name="_create">Create</button>

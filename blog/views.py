@@ -116,38 +116,74 @@ import time
 from web3 import Web3, HTTPProvider
 from solc import compile_source
 def blockchain_start(request):
+	global contractAddress, balance, power, chprice, exprice, qSizeSell, qSizeBuy
 	if request.method == "POST":
-		if "_create" in request.POST:
+		if "_login" in request.POST:
+			balance, power = ethereum_login(request)
+		elif "_create" in request.POST:
 			contract_create(request)
 		elif "_at" in request.POST:
-			addr = contract_ready(request)
-			return render(request, 'blog/blockchain_start.html', {'contract_address': addr})
+			contractAddress = contract_ready(request)
 		elif "_seller" in request.POST:
 			chprice = contract_sell(request)
-			return render(request, 'blog/blockchain_start.html', {'cheapest_price':chprice})
 		elif "_buyer" in request.POST:
 			exprice = contract_buy(request)
-			return render(request, 'blog/blockchain_start.html', {'expensive_price':exprice})
 		elif "_queueTop_sell" in request.POST:
 			chprice = cheapest(request)
-			return render(request, 'blog/blockchain_start.html', {'cheapest_price':chprice})
 		elif "_queueTop_buy" in request.POST:
 			exprice = expensive(request)
-			return render(request, 'blog/blockchain_start.html', {'expensive_price':exprice})
 		elif "_matching" in request.POST:
 			chprice ,exprice, qSizeSell, qSizeBuy = matching(request)
-			return render(request, 'blog/blockchain_start.html', {'cheapest_price':chprice, 'expensive_price':exprice, 'queueSize_sell':qSizeSell, 'queueSize_buy':qSizeBuy})
-	return render(request, 'blog/blockchain_start.html')
+	
+	if 'contractAddress' not in globals():
+		contractAddress = ""
+	if 'balance' not in globals():
+		balance = ""
+	if 'power' not in globals():
+		power = ""
+	if 'chprice' not in globals():
+		chprice = ""
+	if 'exprice' not in globals():
+		exprice = ""
+	if 'qSizeSell' not in globals():
+		qSizeSell = ""
+	if 'qSizeBuy' not in globals():
+		qSizeBuy = ""
+
+	return render(request, 'blog/blockchain_start.html', {'contract_address': contractAddress, 'balance':balance, 'powerAmount':power, 'cheapest_price':chprice, 'expensive_price':exprice, 'queueSize_sell':qSizeSell, 'queueSize_buy':qSizeBuy})
+
+
+def ethereum_login(request):
+	print("login section")
+
+	#Connect blockchain
+	global w3
+	rpc_url="http://localhost:8541"
+	w3 = Web3(HTTPProvider(rpc_url))
+
+	#account information
+	addr = w3.toChecksumAddress(request.POST.get("_address"))
+	pw = request.POST.get("_password")
+	w3.personal.unlockAccount(addr, pw,0)
+#TODO; login fail
+
+	print('Connection success')
+
+	balance = w3.fromWei(w3.eth.getBalance(addr), 'wei')
+	if 'auction' not in globals():
+		power = 0
+	else:
+		power = auction.functions.havePowerAmount(addr).call()
+	return balance, power
+
+
 
 #Use only manager
 def contract_create(request):
 	print("contract section")
 
-	#Connect blockchain
-	rpc_url="http://localhost:8541"
-	w3 = Web3(HTTPProvider(rpc_url))
-	w3.personal.unlockAccount(w3.eth.accounts[0],"1234",0)
-	print('Connection success')
+	if 'w3' not in globals():
+		ethereum_login(request)
 
 	#Read contract source file
 	pwd = os.path.dirname(__file__)
@@ -191,12 +227,9 @@ def contract_create(request):
 
 def contract_ready(request):
 	print ('ready section')
-
-	#Connect blockchain
-	global w3
-	rpc_url = "http://localhost:8541"
-	w3 = Web3(HTTPProvider(rpc_url))
-	w3.personal.unlockAccount(w3.eth.accounts[0],"1234",0)
+	
+	if 'w3' not in globals():
+		ethereum_login(request)
 
 	if 'auction' not in globals():
 		print ('auction not in globals section')
