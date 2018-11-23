@@ -120,6 +120,8 @@ def blockchain_start(request):
 	if request.method == "POST":
 		if "_login" in request.POST:
 			sender, balance, power = ethereum_login(request)
+		elif "_update" in request.POST:
+			balance, power = ethereum_update(request)
 		elif "_create" in request.POST:
 			contractAddress = contract_create(request)
 		elif "_at" in request.POST:
@@ -179,7 +181,21 @@ def ethereum_login(request):
 
 	return addr, balance, power
 
+def ethereum_update(request):
+	print("balance update section")
 
+	if 'w3' not in globals():
+		addr, balance, power = ethereum_login(request)
+		return balance, power
+
+	balance = w3.fromWei(w3.eth.getBalance(sender), 'wei')
+	if 'auction' not in globals():
+		power =0
+	else:
+		power = auction.functions.havePowerAmount(sender).call()
+
+
+	return balance, power
 
 #Use only manager
 def contract_create(request):

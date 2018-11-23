@@ -3,7 +3,7 @@
 // It is by far not complete and only used to show some
 // features of Solidity.
 ////////////////////////////////////////////////////////////
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 import "./contract/pqueue.sol";
 
 contract Auction is queue {
