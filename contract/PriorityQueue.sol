@@ -1,6 +1,11 @@
+////////////////////////////////////////////////////////////
+// This is an example contract hacked together at a meetup.
+// It is by far not complete and only used to show some
+// features of Solidity.
+////////////////////////////////////////////////////////////
 pragma solidity ^0.4.24;
 
-contract queue
+contract PriorityQueue
 {
     struct Queue {
         Trade[] trades;
@@ -40,9 +45,7 @@ contract queue
         else return false;
     }
     
-    function size(Queue storage q) constant internal returns (uint) {
-        return q.back - q.front;
-    }
+    
     function top(Queue storage q) constant internal returns (uint) {
         return q.trades[q.front].fee;
     }
@@ -58,6 +61,13 @@ contract queue
 
     function capacity(Queue storage q) constant internal returns (uint) {
         return q.trades.length - 1;
+    }
+    
+    function size(Queue storage q) constant internal returns (uint) {
+        if(q.back < q.front)
+            return capacity(q) - q.front + q.back;
+        else 
+            return q.back - q.front;
     }
     
     function push(Queue storage q, address addr, uint powerAmount, uint data) internal
@@ -119,36 +129,6 @@ contract queue
             else break;
         }
         return (addr, powerAmount, fee, KwPerPrice);
-    }
-    
-}
-
-contract QueueUserMayBeDeliveryDroneControl is queue {
-    Queue requests;
-    constructor() public {
-        requests.trades.length=200;
-        requests.sort = true;
-    }
-    function setSort(bool sort) public {
-        return setSort(requests, sort);
-    }
-    function addRequest(uint powerAmount, uint d) public {
-        push(requests, msg.sender, powerAmount, d);
-    }
-    function popRequest() public returns (address addr, uint powerAmount, uint fee, uint kwPerPrice) {
-        return pop(requests);
-    }
-    function queueSize() public view returns (uint) {
-        return size(requests);
-    }
-    function queueTop() public view returns (uint){
-        return top(requests);
-    }
-    function getFront() public view returns (uint){
-        return getFront(requests);
-    }
-    function getBack() public view returns (uint){
-        return getBack(requests);
     }
     
 }

@@ -4,9 +4,9 @@
 // features of Solidity.
 ////////////////////////////////////////////////////////////
 pragma solidity ^0.4.24;
-import "./contract/pqueue.sol";
+import "./contract/PriorityQueue.sol";
 
-contract Auction is queue {
+contract Auction is PriorityQueue {
     //data
     Queue buyerList;
     Queue sellerList;
@@ -25,8 +25,10 @@ contract Auction is queue {
     
     //buyer
     function addRequest_buy(uint powerAmount) payable public {
-        if(msg.sender.balance > msg.value)
+        if(msg.sender.balance > msg.value){
             push(buyerList, msg.sender, powerAmount, msg.value);
+            matching();
+        }
     }
     
     function queueSize_buy() public view returns (uint) {
@@ -38,8 +40,11 @@ contract Auction is queue {
     
     //seller
     function addRequest_sell(uint powerAmount, uint d) public {
-        //havePowerAmount[msg.sender] -= powerAmount;
+        // if(havePowerAmount[buyer.addr] < buyer.powerAmount) {
+        //     return;
+        // }
         push(sellerList, msg.sender, powerAmount, d);
+        matching();
     }
     
     function queueSize_sell() public view returns (uint) {
@@ -58,7 +63,9 @@ contract Auction is queue {
         matchingSuccess = false;
         uint sellerPrice = top_kwPerPrice(sellerList);
         uint buyerPrice = top_kwPerPrice(buyerList);
-        if(buyerPrice > sellerPrice){
+        if(buyerPrice >= sellerPrice){
+            
+            
             Trade memory seller;
             Trade memory buyer;
             seller.addr = top_addr(sellerList);
@@ -75,8 +82,9 @@ contract Auction is queue {
             pop(buyerList);
             
             if(seller.powerAmount > buyer.powerAmount){
-                havePowerAmount[buyer.addr] += buyer.powerAmount;
                 //havePowerAmount[seller.addr] -= buyer.powerAmount;
+                havePowerAmount[buyer.addr] += buyer.powerAmount;
+                
                 seller.powerAmount -= buyer.powerAmount; 
                 seller.fee = seller.powerAmount * seller.kwPerPrice;
                 
@@ -86,8 +94,9 @@ contract Auction is queue {
                 return;
                 
             }else if (seller.powerAmount < buyer.powerAmount){
-                havePowerAmount[buyer.addr] += seller.powerAmount;
                 //havePowerAmount[seller.addr] -= seller.powerAmount;
+                havePowerAmount[buyer.addr] += seller.powerAmount;
+                
                 buyer.powerAmount -= seller.powerAmount;
                 uint sendFee = seller.powerAmount * buyer.kwPerPrice;
                 buyer.fee = buyer.fee - sendFee;
@@ -98,8 +107,8 @@ contract Auction is queue {
                 return;
                 
             }else if(seller.powerAmount == buyer.powerAmount){
-                havePowerAmount[buyer.addr] += buyer.powerAmount;
                 //havePowerAmount[seller.addr] -= buyer.powerAmount;
+                havePowerAmount[buyer.addr] += buyer.powerAmount;
                 
                 seller.addr.transfer(buyer.fee);
                 matchingSuccess = true;
