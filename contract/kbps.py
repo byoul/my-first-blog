@@ -8,7 +8,7 @@ from solc import compile_source
 rpc_url="http://localhost:8541"
 w3 = Web3(HTTPProvider(rpc_url))
 
-addr= w3.toChecksumAddress('2f5585e4f2505e225678483a19a2294c94f64f08')
+addr= w3.toChecksumAddress('c6d9b140af75f7087dc32b29cd50940f264012e0')
 pw = '1234'
 w3.personal.unlockAccount(addr,pw,0)
 balance = w3.fromWei(w3.eth.getBalance(addr), 'wei')
@@ -21,7 +21,7 @@ pwd = os.path.dirname(os.path.abspath(__file__))
 
 print('asdf')
 
-f = open(pwd + '/contract/Auction.sol')
+f = open(pwd + '/Auction.sol')
 contract_source_code = f.read()
 f.close()
 
@@ -52,16 +52,20 @@ print("Creating first contract success")
 #addRequest_buy---------------------------------------------
 sender = addr
 def buy():
-	power = int("100000")
-	fee = int("100000")
+	r1 = random.randrange(1000000,10000000000)
+	r2 = random.randrange(1,1000000)
+	power = r1
+	fee = r2
 	tx_hash = auction.functions.addRequest_buy(power).transact({'from':sender, 'value':fee, 'gas':3000000})
 	#tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
 	print("Reqeust for buyer success")
 
 #addRequest_sell---------------------------------------------
 def sell():
-	power = int("100000")
-	fee = int("100000")
+	r1 = random.randrange(1000000,10000000000)
+	r2 = random.randrange(1,1000000)
+	power = r1
+	fee = r2
 	tx_hash = auction.functions.addRequest_sell(power,fee).transact({'from':sender,'gas':3000000})
 	#tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
 	print('Request for seller success')

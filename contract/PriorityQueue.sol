@@ -80,7 +80,7 @@ contract PriorityQueue
         q.trades[idx].addr = addr;
         q.trades[idx].powerAmount = powerAmount;
         q.trades[idx].fee = data;
-        q.trades[idx].kwPerPrice = data / powerAmount;
+        q.trades[idx].kwPerPrice = data * 8192 / powerAmount;
         
         q.back = (q.back + 1) % q.trades.length;
         

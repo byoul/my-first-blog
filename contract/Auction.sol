@@ -4,7 +4,7 @@
 // features of Solidity.
 ////////////////////////////////////////////////////////////
 pragma solidity ^0.4.24;
-import "./contract/PriorityQueue.sol";
+import "./PriorityQueue.sol";
 
 contract Auction is PriorityQueue {
     //data
