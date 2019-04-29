@@ -1,0 +1,59 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<h3>Login</h3>
+<form method="POST">{% csrf_token %}
+	Address : <input type="text" name="_address"/><br/>
+	Password : <input type="password" name="_password"/><br/>
+	<button name="_login">LOGIN</button><br/>
+</form>
+
+<form method="POST">{% csrf_token %}
+	Balances : {{ balance }}<br/>
+	Power : {{ powerAmount }}<br/>
+	<button name="_update">UPDATE</button>
+</form>
+
+
+<h3>Auction contract Create</h3>
+<form method="POST" class="create">{% csrf_token %}
+	<button id="btnCreate" name="_create">Create</button>
+</form>
+
+
+<h3>At</h3>
+<form method="POST" class="at">{% csrf_token %}
+	Contract Address : {{ contract_address }}</p>
+	<button id="btnAt" name="_at">At</button>
+</form>
+
+
+<h3>New Seller</h3>
+<form method="POST" class="seller">{% csrf_token %}
+	{{ form.as_p }}
+	Power : <input type="text" id="_sellerPower" name="_sellerPower" size="40"/><br/>
+	Fee : <input type="text" id="_sellerFee" name="_sellerFee" size="20"/>
+	<button id="btnNewSeller" name="_seller">New Seller</button><br/>
+
+	Cheapest Seller - Kw/Price :     {{ cheapest_price }}
+	<button id="btnTopSeller" name="_queueTop_sell">CHECK</button>
+</form>
+
+<h3>New Buyer</h3>
+<form method="POST" class="buyer">{% csrf_token %}
+	Power : <input type="text" id="_buyerPower" name="_buyerPower" size="40"/><br/>
+	Fee : <input type="text" id="_buyerFee" name="_buyerFee" size="20"/>
+	<button id="btnNewBuyer" name="_buyer">New Buyer</button><br/>
+	
+	Most Expensive Buyer - Kw/Price :   {{ expensive_price}}
+	<button id="btnTopBuyer" name="_queueTop_buy">CHECK</button>
+</form>
+
+<h3>MATCHING</h3>
+<form method="POST" class="matching">{% csrf_token %}
+	<button id="btnMatching" name="_matching">MATCHING</button><br/>
+	QueueSize Sell : {{ queueSize_sell }}<br/>
+	QueueSize Buy  : {{ queueSize_buy }}
+</form>
+
+{% endblock %}

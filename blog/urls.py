@@ -14,4 +14,12 @@ urlpatterns = [
 	url(r'^comment/(?P<pk>\d+)/remove/$', views.comment_remove, name='comment_remove'),
 	url(r'^signup/$', views.signup, name='signup'),
 	url(r'^blockchain_start/$', views.blockchain_start, name='blockchain_start'),
+	url(r'^blockchain_start/login', views.ethereum_login, name='ethereum_login'),
+	url(r'^blockchain_start/create/$', views.contract_create, name='contract_create'),
+	url(r'^blockchain_start/ready/$', views.contract_ready, name='contract_ready'),
+	url(r'^blockchain_start/sell/$', views.contract_sell, name='contract_sell'),
+	url(r'^blockchain_start/buy/$', views.contract_buy, name='contract_buy'),
+	url(r'^blockchain_start/cheapest/$', views.cheapest, name='cheapest'),
+	url(r'^blockchain_start/expensive/$', views.expensive, name='expensive'),
+	url(r'^blockchain_start/matching/$', views.matching, name='matching'),
 ]
